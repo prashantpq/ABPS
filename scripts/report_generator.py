@@ -11,7 +11,7 @@ def generate_report():
     url_list = [
     # Classic public domain physics books - Project Gutenberg
     "https://www.gutenberg.org/files/40175/40175-h/40175-h.htm",  # *Physics* (Willis E. Tower et al.)
-    "https://www.gutenberg.org/files/10773/10773-h/10773-h.htm",  # *Ancient and Modern Physics* (Thomas E. Willson)
+    "https://www.gutenberg.org/files/20417/20417-h/20417-h.htm",  # The Concept of Nature by A.N. Whitehead
     "https://www.gutenberg.org/files/1225/1225-h/1225-h.htm",    # *Faraday as a Discoverer* (John Tyndall)
     "https://www.gutenberg.org/files/69022/69022-h/69022-h.htm"   # *Worlds in the Making* (Svante Arrhenius)
     ]
