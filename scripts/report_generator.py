@@ -1,59 +1,31 @@
-import os
 import sys
-from datetime import datetime
+import os
 
-# Allow importing from parent directory
+# Add the parent directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from scraping.scrape_chapters import fetch_chapter
-from scraping.rl_scrape_evaluator import evaluate_all_chapters, load_chapter_texts
-from scraping.screenshot_handler import capture_screenshot  # If implemented
-
-# Set the URL and filename (adjust URL to target site)
-SCRAPE_URL = "https://www.abps.org.in/abps-annual-reports/"
-SAVE_FILENAME = "abps_chapters_raw.txt"
+from scraping.scrape_chapters import scrape_all_chapters
+from scraping.rl_scrape_evaluator import evaluate_all_chapters  # If used
 
 def generate_report():
-    print("📥 Starting data scraping...")
-    fetch_chapter(SCRAPE_URL, SAVE_FILENAME)  # This saves HTML/screenshot
+    url_list = [
+    # Classic public domain physics books - Project Gutenberg
+    "https://www.gutenberg.org/files/40175/40175-h/40175-h.htm",  # *Physics* (Willis E. Tower et al.)
+    "https://www.gutenberg.org/files/10773/10773-h/10773-h.htm",  # *Ancient and Modern Physics* (Thomas E. Willson)
+    "https://www.gutenberg.org/files/1225/1225-h/1225-h.htm",    # *Faraday as a Discoverer* (John Tyndall)
+    "https://www.gutenberg.org/files/69022/69022-h/69022-h.htm"   # *Worlds in the Making* (Svante Arrhenius)
+    ]
+    output_dir = os.path.join(os.path.dirname(__file__), "../data/raw_html")
 
-    print("📖 Loading chapter texts...")
-    try:
-        data = load_chapter_texts()
-    except FileNotFoundError as e:
-        print(f"[✗] {e}")
-        return
+    print("Starting scraping...")
+    scraped_files = scrape_all_chapters(url_list, output_dir)
 
-    print("🧪 Evaluating scraped data...")
-    evaluation = evaluate_all_chapters(data)
+    print("\nEvaluating content quality...")
+    evaluation = evaluate_all_chapters(os.path.join(os.path.dirname(__file__), "../data"))
 
-    print("📸 Capturing screenshot of results...")
-    try:
-        capture_screenshot()
-    except:
-        print("[!] Screenshot capture skipped or failed.")
-
-    print("📝 Preparing report...")
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    report_filename = f"report_{timestamp}.txt"
-
-    with open(report_filename, 'w') as report_file:
-        report_file.write("📄 Scrape Report\n")
-        report_file.write("====================\n")
-        report_file.write(f"🕒 Timestamp: {timestamp}\n\n")
-
-        report_file.write("📊 Evaluation Summary:\n")
-        for chapter, score in evaluation:
-            report_file.write(f"- {chapter}: {score}\n")
-
-        report_file.write("\n🧾 Sample Data:\n")
-        for i, (chapter, content) in enumerate(data.items()):
-            if i >= 3:
-                break
-            report_file.write(f"\n--- {chapter} ---\n")
-            report_file.write(content[:500] + "...\n")  # Preview
-
-    print(f"✅ Report saved as: {report_filename}")
+    print("\n--- Report Summary ---")
+    print(f"Total chapters scraped: {len(scraped_files)}")
+    print(f"Total evaluated: {len(evaluation)}")
 
 if __name__ == "__main__":
     generate_report()

@@ -1,2 +1,4 @@
 playwright
-
+selenium
+bs4
+requests

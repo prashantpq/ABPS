@@ -1,71 +1,42 @@
+# scraping/rl_scrape_evaluator.py
 import os
-from pathlib import Path
-from typing import Dict, List, Tuple
+from bs4 import BeautifulSoup
 
-# Directory where your cleaned text data is stored
-CLEANED_DATA_DIR = Path("data/cleaned")
+def evaluate_html_quality(html_path):
+    try:
+        with open(html_path, 'r', encoding='utf-8') as file:
+            soup = BeautifulSoup(file, 'html.parser')
+            
+            text = soup.get_text(strip=True)
+            if not text:
+                return "No text found", 0
+            elif len(text) < 500:
+                return "Too little content", 1
+            elif len(text) > 10000:
+                return "Content too long", 2
+            else:
+                return "Good content", 3
+    except Exception as e:
+        return f"Error: {str(e)}", 0
 
-def load_chapter_texts() -> Dict[str, str]:
-    """
-    Loads all cleaned chapter text files.
-
-    Returns:
-        dict: Dictionary of {filename (without .txt): content}
-    """
-    if not CLEANED_DATA_DIR.exists():
-        raise FileNotFoundError(f"[!] Cleaned data folder not found at {CLEANED_DATA_DIR}")
-
-    data = {}
-    for file in CLEANED_DATA_DIR.glob("*.txt"):
-        with open(file, "r", encoding="utf-8") as f:
-            data[file.stem] = f.read()
-    return data
-
-def score_chapter(text: str) -> float:
-    """
-    Dummy scoring function: returns a score between 0 and 1 based on length.
-    """
-    score = min(1.0, len(text) / 1000)
-    return round(score, 3)
-
-def evaluate_all_chapters(chapter_data):
-    if not chapter_data:
-        print("[!] No chapter data provided. Please check input.\n")
-        return None
-
-    print(f"[~] Received {len(chapter_data)} chapters for evaluation...\n")
-
+def evaluate_all_chapters(data_folder):
     results = []
+    html_folder = os.path.join(data_folder, "raw_html")
+    if not os.path.exists(html_folder):
+        print("No raw_html directory found")
+        return results
 
-    for idx, chapter in enumerate(chapter_data):
-        print(f"[*] Evaluating chapter {idx + 1}: {chapter[:60]}...")  # preview
-        try:
-            score = score_chapter(chapter)
-            results.append((chapter, score))
-        except Exception as e:
-            print(f"[x] Error evaluating chapter {idx + 1}: {e}")
-            continue
+    for filename in os.listdir(html_folder):
+        if filename.endswith(".html"):
+            filepath = os.path.join(html_folder, filename)
+            message, score = evaluate_html_quality(filepath)
+            results.append((filename, score))
+            print(f"{filename}: {message} (Score: {score})")
 
     if not results:
-        print("[!] No chapters were successfully evaluated.\n")
-        return None
+        print("No HTML files found for evaluation")
+        return results
 
     avg_score = round(sum(score for _, score in results) / len(results), 4)
-
-    print(f"\n[✓] Evaluation complete. Average Score: {avg_score}\n")
-
-    return {
-        "average_score": avg_score,
-        "chapter_scores": results
-    }
-
-
-# If run directly
-if __name__ == "__main__":
-    try:
-        data = load_chapter_texts()
-        summary = evaluate_all_chapters(data)
-        print("\n--- Evaluation Summary ---")
-        print(summary)
-    except FileNotFoundError as e:
-        print(e)
+    print(f"\nAverage quality score: {avg_score}\n")
+    return results
